@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>Exploratory Data Analysis Of Bike Sharing Demand | DS</title>
+<meta name="generator" content="Jekyll v3.8.2" />
+<meta property="og:title" content="Exploratory Data Analysis Of Bike Sharing Demand" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Introduction" />
+<meta property="og:description" content="Introduction" />
+<link rel="canonical" href="http://localhost:4000/jekyll/update/2018/02/24/eda-bike-sharing-demand.html" />
+<meta property="og:url" content="http://localhost:4000/jekyll/update/2018/02/24/eda-bike-sharing-demand.html" />
+<meta property="og:site_name" content="DS" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2018-02-24T22:40:47+08:00" />
+<script type="application/ld+json">
+{"description":"Introduction","@type":"BlogPosting","url":"http://localhost:4000/jekyll/update/2018/02/24/eda-bike-sharing-demand.html","headline":"Exploratory Data Analysis Of Bike Sharing Demand","dateModified":"2018-02-24T22:40:47+08:00","datePublished":"2018-02-24T22:40:47+08:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/jekyll/update/2018/02/24/eda-bike-sharing-demand.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="DS" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">DS</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Exploratory Data Analysis Of Bike Sharing Demand</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2018-02-24T22:40:47+08:00" itemprop="datePublished">Feb 24, 2018
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h2 id="introduction">Introduction</h2>
+
+<p><strong>Bike Sharing Demand</strong> 是 <strong>Kaggle</strong> 上的一個已結束的比賽題目，比賽目的是<strong>預測</strong>城市裡共享單車系統<strong>逐時</strong>的<strong>被租賃數目</strong>。</p>
+
+<p>自從幾年前遇到這個資料以後，它就被我拿來當作反覆練習的材料，因為我認為這個資料集有以下優點：</p>
+
+<ul>
+  <li>它是真實資料，跟一般教科書上用來練習演算法的完美資料不同，我們必須親手整理它，所以在進行特徵工程的時候，可以用各種不同的角度來建構這個資料。</li>
+  <li>雖帶有時間序列的結構，但<strong>逐時</strong>之間又可以看到清楚的模式，所以我們可以同時練習不同類型的演算法來預測。</li>
+</ul>
+
+<p>以此文紀錄我如何實做 <strong>Bike Sharing Demand</strong> 這個資料的探索性分析</p>
+
+<h2 id="內容大綱">內容大綱</h2>
+
+<ul>
+  <li>資料集介紹</li>
+  <li>使用套件</li>
+  <li>載入資料</li>
+  <li>資料維度及內容</li>
+  <li>特徵工程: 新增時間特徵</li>
+  <li>為特徵設定合理的變數型態</li>
+  <li>觀察反應變數</li>
+  <li>觀察類別變數與反應變數的關係</li>
+  <li>觀察連續變數與反應變數的關係</li>
+  <li>其他角度的觀察</li>
+  <li>小結</li>
+</ul>
+
+<h2 id="資料集介紹">資料集介紹</h2>
+
+<p><a href="https://www.kaggle.com/c/bike-sharing-demand/data">Bike Sharing Demand From Kaggle</a></p>
+
+<p>You are provided hourly rental data spanning two years. For this competition, the training set is comprised of the first 19 days of each month, while the test set is the 20th to the end of the month. You must predict the total count of bikes rented during each hour covered by the test set, using only information available prior to the rental period.</p>
+
+<p><strong>Data Fields</strong></p>
+
+<ul>
+  <li><code class="highlighter-rouge">datetime</code>: hourly date + timestamp (時間標注)</li>
+  <li><code class="highlighter-rouge">season</code>: (季節)
+    <ul>
+      <li>1 = spring (春)</li>
+      <li>2 = summer (夏)</li>
+      <li>3 = fall (秋)</li>
+      <li>4 = winter (冬)</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">holiday</code>: whether the day is considered a holiday (是否為假日)</li>
+  <li><code class="highlighter-rouge">workingday</code>: whether the day is neither a weekend nor holiday (是否為工作日)</li>
+  <li><code class="highlighter-rouge">weather</code>: (天氣)
+    <ul>
+      <li>1: Clear, Few clouds, Partly cloudy, Partly cloudy （晴朗少雲）</li>
+      <li>2: Mist + Cloudy, Mist + Broken clouds, Mist + Few clouds, Mist (多雲)</li>
+      <li>3: Light Snow, Light Rain + Thunderstorm + Scattered clouds, Light Rain + Scattered clouds (雷雨)</li>
+      <li>4: Heavy Rain + Ice Pallets + Thunderstorm + Mist, Snow + Fog (極端天氣)</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">temp</code>: temperature in Celsius (溫度)</li>
+  <li><code class="highlighter-rouge">atemp</code>: “feels like” temperature in Celsius (體感溫度)</li>
+  <li><code class="highlighter-rouge">humidity</code>: relative humidity (濕度)</li>
+  <li><code class="highlighter-rouge">windspeed</code>: wind speed (風速)</li>
+  <li><code class="highlighter-rouge">casual</code>: number of non-registered user rentals initiated (未註冊用戶租賃數量)</li>
+  <li><code class="highlighter-rouge">registered</code>: number of registered user rentals initiated (註冊用戶租賃數量)</li>
+  <li><code class="highlighter-rouge">count</code>: number of total rentals (總租賃數量)</li>
+</ul>
+
+<h2 id="使用套件">使用套件</h2>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">library</span><span class="p">(</span><span class="n">magrittr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">dplyr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">tidyr</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">lubridate</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">ggplot2</span><span class="p">)</span><span class="w">
+</span><span class="n">library</span><span class="p">(</span><span class="n">GGally</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="載入資料">載入資料</h2>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">train</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">read.csv</span><span class="p">(</span><span class="n">file</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"./data/train.csv"</span><span class="p">,</span><span class="w"> </span><span class="n">stringsAsFactors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">FALSE</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="資料維度及內容">資料維度及內容</h2>
+
+<ul>
+  <li>可以看到初始載入的資料一共有 <code class="highlighter-rouge">10886</code>筆資料，且有 <code class="highlighter-rouge">12</code> 個變數。</li>
+  <li>有些特徵的變數型態必須要調整，如 <code class="highlighter-rouge">season</code>、<code class="highlighter-rouge">holiday</code>、<code class="highlighter-rouge">workingday</code>、<code class="highlighter-rouge">weather</code>等，必須是類別型(<em>factor</em>)而非整數型(<em>integer</em>)</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">str</span><span class="p">(</span><span class="n">train</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## 'data.frame':    10886 obs. of  12 variables:
+##  $ datetime  : chr  "2011-01-01 00:00:00" "2011-01-01 01:00:00" "2011-01-01 02:00:00" "2011-01-01 03:00:00" ...
+##  $ season    : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ holiday   : int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ workingday: int  0 0 0 0 0 0 0 0 0 0 ...
+##  $ weather   : int  1 1 1 1 1 2 1 1 1 1 ...
+##  $ temp      : num  9.84 9.02 9.02 9.84 9.84 ...
+##  $ atemp     : num  14.4 13.6 13.6 14.4 14.4 ...
+##  $ humidity  : int  81 80 80 75 75 75 80 86 75 76 ...
+##  $ windspeed : num  0 0 0 0 0 ...
+##  $ casual    : int  3 8 5 3 0 0 2 1 1 8 ...
+##  $ registered: int  13 32 27 10 1 1 0 2 7 6 ...
+##  $ count     : int  16 40 32 13 1 1 2 3 8 14 ...
+</code></pre></div></div>
+
+<h2 id="特徵工程-新增時間特徵">特徵工程: 新增時間特徵</h2>
+
+<p>此資料為時間序列型結構的資料，但<code class="highlighter-rouge">datetime</code>給我們的是像 <code class="highlighter-rouge">"2011-01-01 00:00:00"</code>這樣的紀錄，為了分析的方便，我們必須拆解他，將日期與時間獨立取出，另外創造一些可能會用到的日期或時間變數：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">date</code>: 日期 <code class="highlighter-rouge">yyyy-mm-dd</code></li>
+  <li><code class="highlighter-rouge">hour</code>: 每小時一筆資料 <code class="highlighter-rouge">00</code>, <code class="highlighter-rouge">01</code>, <code class="highlighter-rouge">02</code>, …, <code class="highlighter-rouge">22</code>, <code class="highlighter-rouge">23</code></li>
+  <li><code class="highlighter-rouge">year</code>: 年份</li>
+  <li><code class="highlighter-rouge">month</code>: 月份</li>
+  <li><code class="highlighter-rouge">weekday</code>: 星期幾</li>
+  <li><code class="highlighter-rouge">dailyType</code>: 雖然有假日與工作日變數，但是否有可能同時是不是假日也不是工作日的日期？</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># date: yyyy-mm-dd</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">date</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">substr</span><span class="p">(</span><span class="n">train</span><span class="o">$</span><span class="n">datetime</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">as.Date</span><span class="p">(</span><span class="n">.</span><span class="p">)</span><span class="w">
+</span><span class="c1"># hour</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">hour</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">substr</span><span class="p">(</span><span class="n">train</span><span class="o">$</span><span class="n">datetime</span><span class="p">,</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">12</span><span class="p">,</span><span class="w"> </span><span class="n">stop</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">13</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">factor</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">levels</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"00"</span><span class="p">,</span><span class="w"> </span><span class="s2">"01"</span><span class="p">,</span><span class="w"> </span><span class="s2">"02"</span><span class="p">,</span><span class="w"> </span><span class="s2">"03"</span><span class="p">,</span><span class="w"> </span><span class="s2">"04"</span><span class="p">,</span><span class="w"> </span><span class="s2">"05"</span><span class="p">,</span><span class="w"> </span><span class="s2">"06"</span><span class="p">,</span><span class="w"> </span><span class="s2">"07"</span><span class="p">,</span><span class="w"> </span><span class="s2">"08"</span><span class="p">,</span><span class="w"> </span><span class="s2">"09"</span><span class="p">,</span><span class="w"> </span><span class="s2">"10"</span><span class="p">,</span><span class="w"> </span><span class="s2">"11"</span><span class="p">,</span><span class="w"> </span><span class="s2">"12"</span><span class="p">,</span><span class="w"> </span><span class="s2">"13"</span><span class="p">,</span><span class="w"> </span><span class="s2">"14"</span><span class="p">,</span><span class="w"> </span><span class="s2">"15"</span><span class="p">,</span><span class="w"> </span><span class="s2">"16"</span><span class="p">,</span><span class="w"> </span><span class="s2">"17"</span><span class="p">,</span><span class="w"> </span><span class="s2">"18"</span><span class="p">,</span><span class="w"> </span><span class="s2">"19"</span><span class="p">,</span><span class="w"> </span><span class="s2">"20"</span><span class="p">,</span><span class="w"> </span><span class="s2">"21"</span><span class="p">,</span><span class="w"> </span><span class="s2">"22"</span><span class="p">,</span><span class="w"> </span><span class="s2">"23"</span><span class="p">))</span><span class="w">
+</span><span class="c1"># year</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">year</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">year</span><span class="p">(</span><span class="n">train</span><span class="o">$</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">.</span><span class="p">)</span><span class="w">
+</span><span class="c1"># month</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">month</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">month</span><span class="p">(</span><span class="n">train</span><span class="o">$</span><span class="n">date</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">.</span><span class="p">)</span><span class="w">
+</span><span class="c1"># weekday</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">weekday</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">strftime</span><span class="p">(</span><span class="n">train</span><span class="o">$</span><span class="n">date</span><span class="p">,</span><span class="w"> </span><span class="n">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"%w"</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">.</span><span class="p">)</span><span class="w">
+</span><span class="c1"># dailyType</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">dailyType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">0</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">dailyType</span><span class="p">[</span><span class="n">train</span><span class="o">$</span><span class="n">holiday</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">workingday</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">1</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">dailyType</span><span class="p">[</span><span class="n">train</span><span class="o">$</span><span class="n">holiday</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">workingday</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">2</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">dailyType</span><span class="p">[</span><span class="n">train</span><span class="o">$</span><span class="n">holiday</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="m">3</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">dailyType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">dailyType</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">as.factor</span><span class="p">(</span><span class="n">.</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<h2 id="為特徵設定合理的變數型態">為特徵設定合理的變數型態</h2>
+
+<p>經過了特徵工程之後，首先先觀察我們現在擁有哪些特徵變數</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">names</span><span class="p">(</span><span class="n">train</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>##  [1] "datetime"   "season"     "holiday"    "workingday" "weather"   
+##  [6] "temp"       "atemp"      "humidity"   "windspeed"  "casual"    
+## [11] "registered" "count"      "date"       "hour"       "year"      
+## [16] "month"      "weekday"    "dailyType"
+</code></pre></div></div>
+
+<p>其中：</p>
+
+<ul>
+  <li>類別型變數： <code class="highlighter-rouge">season</code>, <code class="highlighter-rouge">holiday</code>, <code class="highlighter-rouge">workingday</code>, <code class="highlighter-rouge">weather</code>, <code class="highlighter-rouge">hour</code>, <code class="highlighter-rouge">year</code>, <code class="highlighter-rouge">month</code>, <code class="highlighter-rouge">weekday</code>, <code class="highlighter-rouge">dailyType</code></li>
+  <li>連續型變數： <code class="highlighter-rouge">temp</code>, <code class="highlighter-rouge">atemp</code>, <code class="highlighter-rouge">humidity</code>, <code class="highlighter-rouge">windspeed</code></li>
+  <li>反應變數：<code class="highlighter-rouge">casual</code>, <code class="highlighter-rouge">registered</code>, <code class="highlighter-rouge">count</code></li>
+</ul>
+
+<p>因此我們依照上述型態改變一下資料集內容的型態</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># feature setup</span><span class="w">
+</span><span class="c1">## season</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">season</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">season</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> 
+                       </span><span class="n">yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"spring"</span><span class="p">,</span><span class="w"> 
+                       </span><span class="n">no</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">season</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> 
+                                   </span><span class="n">yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"summer"</span><span class="p">,</span><span class="w"> 
+                                   </span><span class="n">no</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">season</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> 
+                                               </span><span class="n">yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"fall"</span><span class="p">,</span><span class="w">
+                                               </span><span class="n">no</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"winter"</span><span class="p">)))</span><span class="w">
+</span><span class="c1">## weather</span><span class="w">
+</span><span class="n">train</span><span class="o">$</span><span class="n">weather</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">weather</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> 
+                       </span><span class="n">yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"sunny"</span><span class="p">,</span><span class="w"> 
+                       </span><span class="n">no</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">weather</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> 
+                                   </span><span class="n">yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"cloudy"</span><span class="p">,</span><span class="w"> 
+                                   </span><span class="n">no</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ifelse</span><span class="p">(</span><span class="n">test</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="o">$</span><span class="n">weather</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> 
+                                               </span><span class="n">yes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"rainy"</span><span class="p">,</span><span class="w">
+                                               </span><span class="n">no</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"extremely"</span><span class="p">)))</span><span class="w">
+</span><span class="c1"># type</span><span class="w">
+</span><span class="n">factorType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"season"</span><span class="p">,</span><span class="w"> </span><span class="s2">"holiday"</span><span class="p">,</span><span class="w"> </span><span class="s2">"workingday"</span><span class="p">,</span><span class="w"> </span><span class="s2">"weather"</span><span class="p">,</span><span class="w"> </span><span class="s2">"hour"</span><span class="p">,</span><span class="w"> </span><span class="s2">"year"</span><span class="p">,</span><span class="w"> </span><span class="s2">"month"</span><span class="p">,</span><span class="w"> </span><span class="s2">"weekday"</span><span class="p">,</span><span class="w"> </span><span class="s2">"dailyType"</span><span class="p">)</span><span class="w">
+</span><span class="n">numericType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"temp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"atemp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"humidity"</span><span class="p">,</span><span class="w"> </span><span class="s2">"windspeed"</span><span class="p">)</span><span class="w">
+</span><span class="n">integerType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"casual"</span><span class="p">,</span><span class="w"> </span><span class="s2">"registered"</span><span class="p">,</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># check</span><span class="w">
+</span><span class="n">train</span><span class="p">[,</span><span class="w"> </span><span class="n">factorType</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">train</span><span class="p">[,</span><span class="w"> </span><span class="n">factorType</span><span class="p">],</span><span class="w"> </span><span class="n">as.factor</span><span class="p">)</span><span class="w">
+</span><span class="n">train</span><span class="p">[,</span><span class="w"> </span><span class="n">numericType</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">train</span><span class="p">[,</span><span class="w"> </span><span class="n">numericType</span><span class="p">],</span><span class="w"> </span><span class="n">as.numeric</span><span class="p">)</span><span class="w">
+</span><span class="n">train</span><span class="p">[,</span><span class="w"> </span><span class="n">integerType</span><span class="p">]</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">lapply</span><span class="p">(</span><span class="n">train</span><span class="p">[,</span><span class="w"> </span><span class="n">integerType</span><span class="p">],</span><span class="w"> </span><span class="n">as.integer</span><span class="p">)</span><span class="w">
+</span><span class="c1"># order</span><span class="w">
+</span><span class="n">train</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">select</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">date</span><span class="p">,</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">month</span><span class="p">,</span><span class="w"> </span><span class="n">weekday</span><span class="p">,</span><span class="w"> </span><span class="n">season</span><span class="p">,</span><span class="w"> </span><span class="n">holiday</span><span class="p">,</span><span class="w"> </span><span class="n">workingday</span><span class="p">,</span><span class="w"> </span><span class="n">dailyType</span><span class="p">,</span><span class="w"> </span><span class="n">weather</span><span class="p">,</span><span class="w"> </span><span class="n">temp</span><span class="p">,</span><span class="w"> </span><span class="n">atemp</span><span class="p">,</span><span class="w"> </span><span class="n">humidity</span><span class="p">,</span><span class="w"> </span><span class="n">windspeed</span><span class="p">,</span><span class="w"> </span><span class="n">casual</span><span class="p">,</span><span class="w"> </span><span class="n">registered</span><span class="p">,</span><span class="w"> </span><span class="n">count</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># show </span><span class="w">
+</span><span class="n">str</span><span class="p">(</span><span class="n">train</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>## 'data.frame':    10886 obs. of  17 variables:
+##  $ date      : Date, format: "2011-01-01" "2011-01-01" ...
+##  $ hour      : Factor w/ 24 levels "00","01","02",..: 1 2 3 4 5 6 7 8 9 10 ...
+##  $ year      : Factor w/ 2 levels "2011","2012": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ month     : Factor w/ 12 levels "1","2","3","4",..: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ weekday   : Factor w/ 7 levels "0","1","2","3",..: 7 7 7 7 7 7 7 7 7 7 ...
+##  $ season    : Factor w/ 4 levels "fall","spring",..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ holiday   : Factor w/ 2 levels "0","1": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ workingday: Factor w/ 2 levels "0","1": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ dailyType : Factor w/ 3 levels "1","2","3": 1 1 1 1 1 1 1 1 1 1 ...
+##  $ weather   : Factor w/ 4 levels "cloudy","extremely",..: 4 4 4 4 4 1 4 4 4 4 ...
+##  $ temp      : num  9.84 9.02 9.02 9.84 9.84 ...
+##  $ atemp     : num  14.4 13.6 13.6 14.4 14.4 ...
+##  $ humidity  : num  81 80 80 75 75 75 80 86 75 76 ...
+##  $ windspeed : num  0 0 0 0 0 ...
+##  $ casual    : int  3 8 5 3 0 0 2 1 1 8 ...
+##  $ registered: int  13 32 27 10 1 1 0 2 7 6 ...
+##  $ count     : int  16 40 32 13 1 1 2 3 8 14 ...
+</code></pre></div></div>
+
+<h2 id="觀察反應變數">觀察反應變數</h2>
+
+<p>我們的反應變數有三個，分別是 <code class="highlighter-rouge">casual</code>, <code class="highlighter-rouge">registered</code>以及<code class="highlighter-rouge">count</code>，其中 <code class="highlighter-rouge">count</code> 是 <code class="highlighter-rouge">casual</code>和<code class="highlighter-rouge">registered</code>的加總。 (ie.: , <code class="highlighter-rouge">count</code>=<code class="highlighter-rouge">casual</code>+<code class="highlighter-rouge">registered</code>)</p>
+
+<p>通常我們在後面建模的部份都會先用簡單的模型來建立一個預測的<strong>基準</strong>，往後持續測試的模型或是調整都會以勝過<strong>基準</strong>為基本要求。這個題目最後的目的是預測 <code class="highlighter-rouge">count</code>，所以本質上這是一個屬於<strong>迴歸(<em>Regression</em>)</strong>的問題，因此我們會希望原始資料上的反應值應該要接近常態分佈，所以第一件事情想先觀察反應值是否為常態或是偏態。</p>
+
+<ul>
+  <li>由左圖可以看出我們的 <code class="highlighter-rouge">count</code> 資料是屬於右偏(<em>skew to right</em>)的，因此在後面建模的部份，我們可以考慮對其作轉換 (使用<code class="highlighter-rouge">box-cox</code>或是直接取 <code class="highlighter-rouge">log</code>)，希望讓它變成常態分佈。</li>
+  <li>右圖為取<code class="highlighter-rouge">log</code>之後的分佈圖，可以看到經過<code class="highlighter-rouge">log</code>轉換後還是沒有讓<code class="highlighter-rouge">count</code>的分佈達到常態，這在真實資料上是常見的。</li>
+  <li>等到要建立模型的時候，再測試有沒有其他的轉換函數有機會讓<code class="highlighter-rouge">count</code>的分佈達成常態。</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pic_density_of_count</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">,</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w"> 
+  </span><span class="n">geom_histogram</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">..density..</span><span class="p">),</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"blue"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_density</span><span class="p">(</span><span class="n">colour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"red"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">())</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"the density of response variables: count"</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"density"</span><span class="p">)</span><span class="w">
+
+</span><span class="n">pic_density_of_log_count</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">,</span><span class="w"> </span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="n">count</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="p">)))</span><span class="w"> </span><span class="o">+</span><span class="w"> 
+  </span><span class="n">geom_histogram</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">..density..</span><span class="p">),</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"blue"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_density</span><span class="p">(</span><span class="n">colour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"red"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">())</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"the density of response variables: log(count)"</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"log(count)"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"density"</span><span class="p">)</span><span class="w">
+
+
+</span><span class="n">multiplot</span><span class="p">(</span><span class="n">pic_density_of_count</span><span class="p">,</span><span class="w"> </span><span class="n">pic_density_of_log_count</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-assets/figure-markdown_github/unnamed-chunk-8-1.png" alt="unnamed-chunk-8-1" /></p>
+
+<h2 id="觀察類別變數與反應變數的關係">觀察類別變數與反應變數的關係</h2>
+
+<p>接下來我們來觀察一下各個類別型變數與 <code class="highlighter-rouge">count</code> 的關係，而這邊我們先觀察<strong>非日期相關</strong>的變數，如：<code class="highlighter-rouge">season</code>, <code class="highlighter-rouge">holiday</code>, <code class="highlighter-rouge">workingday</code>, <code class="highlighter-rouge">weather</code>, <code class="highlighter-rouge">dailyType</code>等特徵。</p>
+
+<ul>
+  <li>不管是哪一種分類，都可以看到 <code class="highlighter-rouge">2012</code>年相對於 <code class="highlighter-rouge">2011</code> 年，租賃數有上升的趨勢。
+    <ul>
+      <li>若要確認是否有顯著的上升，可以做一下統計檢定。</li>
+    </ul>
+  </li>
+  <li>直接從 <code class="highlighter-rouge">count</code>的盒狀圖來看，有不少的離群值存在。</li>
+  <li>不同天氣型態有不同的租賃數表現，晴天的租賃數明顯大於雨天，而極端天氣在整個資料集裡只有一筆紀錄，所以我們暫不考慮它與其他天氣型態的比較。</li>
+  <li>不同季節也有明顯的差異，春季相較於其他季節租賃數偏低。</li>
+  <li>至於假日、工作日等型態，肉眼看不出明顯的差異，可以透過檢定判定。</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># count</span><span class="w">
+</span><span class="n">pic_box_count</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_boxplot</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"year"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># season</span><span class="w">
+</span><span class="n">pic_box_season</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_boxplot</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">season</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"season"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># weather</span><span class="w">
+</span><span class="n">pic_box_weather</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_boxplot</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weather</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"weather"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># holiday</span><span class="w">
+</span><span class="n">pic_box_holiday</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_boxplot</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">holiday</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">())</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"holiday"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># workingday</span><span class="w">
+</span><span class="n">pic_box_workingday</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_boxplot</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">workingday</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">())</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"workingday"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+</span><span class="c1"># dailyType</span><span class="w">
+</span><span class="n">pic_box_dailyType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_boxplot</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">year</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">fill</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dailyType</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">())</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"dailyType"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"count"</span><span class="p">)</span><span class="w">
+
+</span><span class="c1"># boxplot_one</span><span class="w">
+</span><span class="n">layout_one</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">matrix</span><span class="p">(</span><span class="nf">c</span><span class="p">(</span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">,</span><span class="w"> </span><span class="m">3</span><span class="p">),</span><span class="w"> </span><span class="n">nrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="p">,</span><span class="w"> </span><span class="n">byrow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">TRUE</span><span class="p">)</span><span class="w">
+</span><span class="n">multiplot</span><span class="p">(</span><span class="n">pic_box_count</span><span class="p">,</span><span class="w"> </span><span class="n">pic_box_weather</span><span class="p">,</span><span class="w"> </span><span class="n">pic_box_season</span><span class="p">,</span><span class="w"> </span><span class="n">layout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">layout_one</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-9-1.png" alt="unnamed-chunk-9-1" /></p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># boxplot_two</span><span class="w">
+</span><span class="n">multiplot</span><span class="p">(</span><span class="n">pic_box_holiday</span><span class="p">,</span><span class="w"> </span><span class="n">pic_box_workingday</span><span class="p">,</span><span class="w"> </span><span class="n">pic_box_dailyType</span><span class="p">,</span><span class="w"> </span><span class="n">cols</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-9-2.png" alt="unnamed-chunk-9-2" /></p>
+
+<h2 id="觀察連續變數與反應變數的關係">觀察連續變數與反應變數的關係</h2>
+
+<p>接著，對於 <code class="highlighter-rouge">temp</code>, <code class="highlighter-rouge">atemp</code>, <code class="highlighter-rouge">humidity</code>, <code class="highlighter-rouge">windspeed</code>這些連續型變數，我們利用相關係數來了解各變數與<code class="highlighter-rouge">count</code>之間的關係。</p>
+
+<ul>
+  <li><code class="highlighter-rouge">temp</code>和 <code class="highlighter-rouge">atemp</code> 符合直覺有極高的相關性，而後面建模時必須擇一，否則會有共線性的問題。</li>
+  <li>溫度(<code class="highlighter-rouge">temp</code>)與<code class="highlighter-rouge">count</code>有接近中度的相關性(<em>0.39</em>)。</li>
+  <li>濕度(<code class="highlighter-rouge">humidity</code>)與<code class="highlighter-rouge">count</code>有接近中度的相關性(<em>-0.31</em>)。</li>
+  <li>風速(<code class="highlighter-rouge">windspeed</code>)與所有變數都是低度相關。</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ggpairs</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">train</span><span class="p">,</span><span class="w"> 
+        </span><span class="n">columns</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"temp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"atemp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"humidity"</span><span class="p">,</span><span class="w"> </span><span class="s2">"windspeed"</span><span class="p">,</span><span class="w"> </span><span class="s2">"count"</span><span class="p">),</span><span class="w">
+        </span><span class="n">upper</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">list</span><span class="p">(</span><span class="n">continuous</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">wrap</span><span class="p">(</span><span class="s2">"cor"</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">8</span><span class="p">,</span><span class="w"> </span><span class="n">alignPercent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">)))</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-10-1.png" alt="unnamed-chunk-10-1" /></p>
+
+<h2 id="其他角度的觀察">其他角度的觀察</h2>
+
+<p>到目前為止，都是針對大類別的特徵做觀察，而我們最後的目的是預測<strong>逐時</strong>的單車租賃數，所以接下來要以<strong>逐時</strong>的角度加上不同類別的型態來做觀察，看看有什麼樣子的情況會讓租賃數有顯著的不同，這些資訊都會影響我們在後面建立模型的時候所使用的特徵工程，也就是會影響特徵的複雜程度。</p>
+
+<p>因為在各個類別底下都有相當多的天數資料，為了簡單的看出是否有差異，我將會用各個類別來分組，並只取分組底下單車租賃數的<strong>平均數</strong>來作觀察。</p>
+
+<p>用季節來分類發現，結果呼應前面類別變數與反應變數關係的觀察，<code class="highlighter-rouge">spring</code> 明顯的與其他季節的租賃數量有差距。</p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># by season</span><span class="w">
+</span><span class="n">temp_season</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">group_by</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">season</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">summarise</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">count</span><span class="p">))</span><span class="w">
+</span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp_season</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_line</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">season</span><span class="p">,</span><span class="w"> </span><span class="n">colour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">season</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"hour"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mean"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-11-1.png" alt="unnamed-chunk-11-1" /></p>
+
+<p>由 <code class="highlighter-rouge">weekday</code>發現，星期六日與其他星期一二三四五的模式明顯不同，接著我們用<code class="highlighter-rouge">dailyType</code>來解釋可能更為明確：</p>
+
+<ul>
+  <li>前面特徵工程我們設定了 <code class="highlighter-rouge">dailyType</code> 變數，其中：
+    <ul>
+      <li><code class="highlighter-rouge">1</code> = 非假日且非工作日 (在平日的假日)</li>
+      <li><code class="highlighter-rouge">2</code> = 非假日但是工作日 (相當於平日)</li>
+      <li><code class="highlighter-rouge">3</code> = 完全的假日</li>
+    </ul>
+  </li>
+  <li>由圖可以看出：
+    <ul>
+      <li>類別 <code class="highlighter-rouge">2</code>在早上的 <code class="highlighter-rouge">6點至8點</code>以及下午的 <code class="highlighter-rouge">5點至7點</code> 明顯的是租賃的高峰，由於類別 <code class="highlighter-rouge">2</code>是上班日的類型，可以推測有不少人在上班日會選擇使用共享單車作為交通工具，移動至上班地點或是上課地點。</li>
+      <li>而類別 <code class="highlighter-rouge">1</code>跟<code class="highlighter-rouge">3</code>的租賃高峰移動至下午時段，而原先在上班日的高峰時間反而鮮少人租賃，推測在假日時，大家選擇共享單車為休憩的交通工具。
+        <ul>
+          <li>能夠用簡單的三個類別，分類出不同的使用行為，這對於後面建立模型可能會相當有幫助。</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># by weekday</span><span class="w">
+</span><span class="n">temp_weekday</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">group_by</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">weekday</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">summarise</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">count</span><span class="p">))</span><span class="w">
+</span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp_weekday</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_line</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weekday</span><span class="p">,</span><span class="w"> </span><span class="n">colour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">weekday</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"hour"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mean"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-12-1.png" alt="unnamed-chunk-12-1" /></p>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># by dailyType</span><span class="w">
+</span><span class="n">temp_dailyType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">group_by</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">dailyType</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">summarise</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">count</span><span class="p">))</span><span class="w">
+</span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp_dailyType</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_line</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">value</span><span class="p">,</span><span class="w"> </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dailyType</span><span class="p">,</span><span class="w"> </span><span class="n">colour</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dailyType</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"hour"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mean"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-12-2.png" alt="unnamed-chunk-12-2" /></p>
+
+<p>通篇的分析，我都只採用<code class="highlighter-rouge">count</code>來觀察租賃數與各種變數之間的關係，所以在最後，至少也想簡單的看一下，非註冊用戶(<em>casual</em>)與註冊用戶(<em>registered</em>)有無使用行為上的顯著差異。</p>
+
+<ul>
+  <li>由最後一張 <code class="highlighter-rouge">Count_Type</code> 的圖可以看出， 非註冊用戶與註冊用戶間有非常明顯不同的行為模式，因兩者呈現的線圖形狀明顯不同。</li>
+  <li>註冊用戶與非註冊用戶的<strong>租賃次數</strong>也有很大的差異。</li>
+  <li>推測有固定交通移動需求的上班族或是學生會偏好註冊，或許是有優惠或是基於方便性。</li>
+</ul>
+
+<div class="language-r highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># by 註冊與否</span><span class="w">
+</span><span class="n">temp_countType</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">train</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">select</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">casual</span><span class="p">,</span><span class="w"> </span><span class="n">registered</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">group_by</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">hour</span><span class="p">)</span><span class="w"> </span><span class="o">%&gt;%</span><span class="w"> </span><span class="n">summarise</span><span class="p">(</span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">mean_casual</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">casual</span><span class="p">),</span><span class="w"> </span><span class="n">mean_registered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean</span><span class="p">(</span><span class="n">registered</span><span class="p">))</span><span class="w">
+</span><span class="n">ggplot</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">temp_countType</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_line</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean_casual</span><span class="p">,</span><span class="w"> </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"casual"</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">geom_line</span><span class="p">(</span><span class="n">mapping</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">aes</span><span class="p">(</span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">hour</span><span class="p">,</span><span class="w"> </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mean_registered</span><span class="p">,</span><span class="w"> </span><span class="n">group</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="p">,</span><span class="w"> </span><span class="n">color</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"registered"</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">scale_color_manual</span><span class="p">(</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"Count_Type"</span><span class="p">,</span><span class="w"> </span><span class="n">values</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nf">c</span><span class="p">(</span><span class="s2">"casual"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#33B31A80"</span><span class="p">,</span><span class="w"> </span><span class="s2">"registered"</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"#B3331A80"</span><span class="p">))</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme_light</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">theme</span><span class="p">(</span><span class="n">plot.background</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">element_blank</span><span class="p">(),</span><span class="w">
+        </span><span class="n">legend.position</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"bottom"</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w">
+  </span><span class="n">labs</span><span class="p">(</span><span class="n">title</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span><span class="w">
+       </span><span class="n">x</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"hour"</span><span class="p">,</span><span class="w">
+       </span><span class="n">y</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"mean"</span><span class="p">)</span><span class="w">
+</span></code></pre></div></div>
+
+<p><img src="https://jianhonglindst.github.io/assets/2018-02-24-eda-bike-sharing-demand-files/figure-markdown_github/unnamed-chunk-13-1.png" alt="unnamed-chunk-13-1" /></p>
+
+<h2 id="小結">小結</h2>
+
+<ul>
+  <li>租賃數的紀錄並不符合常態分佈，必須進行轉換。</li>
+  <li><code class="highlighter-rouge">2011</code> 到 <code class="highlighter-rouge">2012</code> 租賃數有明顯的上升趨勢。</li>
+  <li>租賃數有離群值的存在。</li>
+  <li>進行建模時<code class="highlighter-rouge">溫度</code>與<code class="highlighter-rouge">體感溫度</code>必須擇一，否則可能會有共線性問題。</li>
+  <li>風速與租賃數低度相關。</li>
+  <li>在<code class="highlighter-rouge">season</code>, <code class="highlighter-rouge">weekday</code>, <code class="highlighter-rouge">dailyType</code>等類別個別分組下，租賃數都有不同的模式跑出，所以都是可幫助建模的特徵變數。</li>
+  <li>註冊用戶與非註冊用戶有明顯不同的模式，但基數有差距，可討論需否分開預測再合併計算總數。</li>
+</ul>
+
+<p>以上，為 <strong>Bike Sharing Demand</strong> 這份資料進行的簡易但不嚴謹的探索性資料分析。</p>
+
+  </div><a class="u-url" href="/jekyll/update/2018/02/24/eda-bike-sharing-demand.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">DS</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">DS</li><li><a class="u-email" href="mailto:lewis.lin1134@gmail.com">lewis.lin1134@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/jianhonglindst"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">jianhonglindst</span></a></li><li><a href="https://www.linkedin.com/in/scio-jianhonglin"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#linkedin"></use></svg> <span class="username">scio-jianhonglin</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>R, Python, Data Science, Engineering</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
